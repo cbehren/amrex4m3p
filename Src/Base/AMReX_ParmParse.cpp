@@ -407,7 +407,7 @@ ppindex (const ParmParse::Table& table,
 {
     const ParmParse::PP_entry* fnd = 0;
 
-    if ( n == ParmParse::LAST )
+    if ( n == ParmParse::PPLAST )
     {
         //
         // Search from back of list.
@@ -670,7 +670,7 @@ squeryval (const ParmParse::Table& table,
     {
         amrex::ErrorStream() << "ParmParse::queryval no value number"
                   << ival << " for ";
-        if ( occurence ==  ParmParse::LAST )
+        if ( occurence ==  ParmParse::PPLAST )
 	{
             amrex::ErrorStream() << "last occurence of ";
 	}
@@ -689,7 +689,7 @@ squeryval (const ParmParse::Table& table,
     {
         amrex::ErrorStream() << "ParmParse::queryval type mismatch on value number "
                   << ival << " of " << '\n';
-        if ( occurence == ParmParse::LAST )
+        if ( occurence == ParmParse::PPLAST )
 	{
             amrex::ErrorStream() << " last occurence of ";
 	}
@@ -756,7 +756,7 @@ squeryarr (const ParmParse::Table& table,
     // Does it have sufficient number of values and are they all
     // the same type?
     //
-    if ( num_val == ParmParse::ALL )
+    if ( num_val == ParmParse::PPALL )
     {
 	num_val = def->m_vals.size();
     }
@@ -771,7 +771,7 @@ squeryarr (const ParmParse::Table& table,
     if ( stop_ix >= def->m_vals.size() )
     {
         amrex::ErrorStream() << "ParmParse::queryarr too many values requested for";
-        if ( occurence == ParmParse::LAST )
+        if ( occurence == ParmParse::PPLAST )
 	{
             amrex::ErrorStream() << " last occurence of ";
 	}
@@ -790,7 +790,7 @@ squeryarr (const ParmParse::Table& table,
 	{
 	    amrex::ErrorStream() << "ParmParse::queryarr type mismatch on value number "
 		      <<  n << " of ";
-	    if ( occurence == ParmParse::LAST )
+	    if ( occurence == ParmParse::PPLAST )
 	    {
 		amrex::ErrorStream() << " last occurence of ";
 	    }
@@ -1135,7 +1135,7 @@ ParmParse::get (const char* name,
                 bool&        ptr,
                 int ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1152,7 +1152,7 @@ ParmParse::query (const char* name,
                   bool&        ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1177,7 +1177,7 @@ ParmParse::get (const char* name,
                 int&        ptr,
                 int ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1194,7 +1194,7 @@ ParmParse::query (const char* name,
                   int&        ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1220,7 +1220,7 @@ ParmParse::getarr (const char* name,
                    int         start_ix,
                    int         num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1239,7 +1239,7 @@ ParmParse::queryarr (const char* name,
                      int         start_ix,
                      int         num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1265,7 +1265,7 @@ ParmParse::get (const char* name,
                 long&       ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1282,7 +1282,7 @@ ParmParse::query (const char* name,
                   long&       ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1308,7 +1308,7 @@ ParmParse::getarr (const char* name,
                    int         start_ix,
                    int         num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1327,7 +1327,7 @@ ParmParse::queryarr (const char* name,
                      int         start_ix,
                      int         num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1355,7 +1355,7 @@ ParmParse::get (const char* name,
                 float&      ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1372,7 +1372,7 @@ ParmParse::query (const char* name,
                   float&      ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1398,7 +1398,7 @@ ParmParse::getarr (const char*   name,
                    int           start_ix,
                    int           num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1417,7 +1417,7 @@ ParmParse::queryarr (const char*   name,
                      int           start_ix,
                      int           num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1444,7 +1444,7 @@ ParmParse::get (const char* name,
                 double&     ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1461,7 +1461,7 @@ ParmParse::query (const char* name,
                   double&     ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1487,7 +1487,7 @@ ParmParse::getarr (const char*    name,
                    int            start_ix,
                    int            num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1506,7 +1506,7 @@ ParmParse::queryarr (const char*    name,
                      int            start_ix,
                      int            num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1533,7 +1533,7 @@ ParmParse::get (const char* name,
                 std::string&    ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1550,7 +1550,7 @@ ParmParse::query (const char* name,
                   std::string&    ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1576,7 +1576,7 @@ ParmParse::getarr (const char*     name,
                    int             start_ix,
                    int             num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1595,7 +1595,7 @@ ParmParse::queryarr (const char*     name,
                      int             start_ix,
                      int             num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1622,7 +1622,7 @@ ParmParse::get (const char* name,
                 IntVect&    ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1639,7 +1639,7 @@ ParmParse::query (const char* name,
                   IntVect&    ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1665,7 +1665,7 @@ ParmParse::getarr (const char*     name,
                    int             start_ix,
                    int             num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1684,7 +1684,7 @@ ParmParse::queryarr (const char*     name,
                      int             start_ix,
                      int             num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void
@@ -1709,7 +1709,7 @@ ParmParse::get (const char* name,
                 Box&    ptr,
                 int         ival) const
 {
-    sgetval(m_table, prefixedName(name),ptr,ival, LAST);
+    sgetval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 int
@@ -1726,7 +1726,7 @@ ParmParse::query (const char* name,
                   Box&    ptr,
                   int         ival) const
 {
-    return squeryval(m_table, prefixedName(name),ptr,ival, LAST);
+    return squeryval(m_table, prefixedName(name),ptr,ival, PPLAST);
 }
 
 void
@@ -1752,7 +1752,7 @@ ParmParse::getarr (const char*     name,
                    int             start_ix,
                    int             num_val) const
 {
-    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    sgetarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 int
@@ -1771,7 +1771,7 @@ ParmParse::queryarr (const char*     name,
                      int             start_ix,
                      int             num_val) const
 {
-    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, LAST);
+    return squeryarr(m_table, prefixedName(name),ptr,start_ix,num_val, PPLAST);
 }
 
 void

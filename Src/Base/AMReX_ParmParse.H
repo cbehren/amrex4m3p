@@ -241,7 +241,7 @@ public:
     class Frame;
     class Record;
 
-    enum { LAST = -1, FIRST = 0, ALL = -1 };
+    enum { PPLAST = -1, PPFIRST = 0, PPALL = -1 };
     /**
     * \brief Construct an additional ParmParse object sharing the same
     * internal table as any other such objects in existence.  If
@@ -257,7 +257,7 @@ public:
     * the last occurence.
     */
     int countval (const char* name,
-                  int         n = LAST) const;
+                  int         n = PPLAST) const;
     /**
     * \brief Returns the number of times the given name (prepended with
     * prefix) appears in the table.
@@ -269,7 +269,7 @@ public:
     */
     int countRecords (const std::string& name) const;
     //! Returns the nth record of the given name, or zero if none found.
-    Record getRecord (const std::string& name, int n = LAST) const;
+    Record getRecord (const std::string& name, int n = PPLAST) const;
     //! Write the contents of the table in ASCII to the ostream.
     static void dumpTable (std::ostream& os, bool prettyPrint = false);
     /**
@@ -286,11 +286,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  bool&        ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               bool&        ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -301,11 +301,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   bool&       ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                bool&        ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const bool  val);
@@ -321,12 +321,12 @@ public:
     void getkth (const char* name,
                  int         k,
                  int&        ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
 
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               int&        ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -337,11 +337,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   int&        ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                int&        ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const int  val);
@@ -357,11 +357,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  long&       ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               long&       ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -372,11 +372,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   long&       ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                long&        ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const long  val);
@@ -392,11 +392,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  float&      ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               float&      ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -407,11 +407,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   float&      ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                float&      ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const float  val);
@@ -427,11 +427,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  double&     ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               double&     ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -442,11 +442,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   double&     ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                double&     ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const double  val);
@@ -462,12 +462,12 @@ public:
     void getkth (const char* name,
                  int         k,
                  std::string&    ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
 
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               std::string&    ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -478,11 +478,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   std::string&   ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                std::string&    ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const std::string&  val);
@@ -498,11 +498,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  IntVect&    ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               IntVect&    ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -513,11 +513,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   IntVect&   ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                IntVect&    ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const IntVect&  val);
@@ -533,11 +533,11 @@ public:
     void getkth (const char* name,
                  int         k,
                  Box&        ref,
-                 int         ival = FIRST) const;
+                 int         ival = PPFIRST) const;
     //! Same as getkth() but searches for the last occurrence of name.
     void get (const char* name,
               Box&        ref,
-              int         ival = FIRST) const;
+              int         ival = PPFIRST) const;
     /**
     * \brief Similar to getkth() but returns 0 if there is no kth occurrence
     * of name.  If successful, it returns 1 and stores the value in
@@ -548,11 +548,11 @@ public:
     int querykth (const char* name,
                   int         k,
                   Box&        ref,
-                  int         ival = FIRST) const;
+                  int         ival = PPFIRST) const;
     //! Same as querykth() but searches for the last occurrence of name.
     int query (const char* name,
                Box&        ref,
-               int         ival = FIRST) const;
+               int         ival = PPFIRST) const;
     //! Add a key 'name'with value 'ref' to the end of the PP table.
     void add (const char* name,
               const Box&  val);
@@ -571,24 +571,24 @@ public:
     void getktharr (const char* name,
                     int         k,
                     std::vector<int>& ref,
-                    int         start_ix = FIRST,
-                    int         num_val = ALL) const;
+                    int         start_ix = PPFIRST,
+                    int         num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char* name,
                  std::vector<int>& ref,
-                 int         start_ix = FIRST,
-                 int         num_val = ALL) const;
+                 int         start_ix = PPFIRST,
+                 int         num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char* name,
                      int         k,
                      std::vector<int>& ref,
-                     int         start_ix = FIRST,
-                     int         num_val = ALL) const;
+                     int         start_ix = PPFIRST,
+                     int         num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.
     int queryarr (const char* name,
                   std::vector<int>& ref,
-                  int         start_ix = FIRST,
-                  int         num_val = ALL) const;
+                  int         start_ix = PPFIRST,
+                  int         num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<int>&  ptr);
@@ -608,24 +608,24 @@ public:
     void getktharr (const char* name,
                     int         k,
                     std::vector<long>& ref,
-                    int         start_ix = FIRST,
-                    int         num_val = ALL) const;
+                    int         start_ix = PPFIRST,
+                    int         num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char* name,
                  std::vector<long>& ref,
-                 int         start_ix = FIRST,
-                 int         num_val = ALL) const;
+                 int         start_ix = PPFIRST,
+                 int         num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char* name,
                      int         k,
                      std::vector<long>& ref,
-                     int         start_ix = FIRST,
-                     int         num_val = ALL) const;
+                     int         start_ix = PPFIRST,
+                     int         num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.
     int queryarr (const char* name,
                   std::vector<long>& ref,
-                  int         start_ix = FIRST,
-                  int         num_val = ALL) const;
+                  int         start_ix = PPFIRST,
+                  int         num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<long>&  ptr);
@@ -645,24 +645,24 @@ public:
     void getktharr (const char*   name,
                     int           k,
                     std::vector<float>& ref,
-                    int           start_ix = FIRST,
-                    int           num_val = ALL) const;
+                    int           start_ix = PPFIRST,
+                    int           num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char*   name,
                  std::vector<float>& ref,
-                 int           start_ix = FIRST,
-                 int           num_val = ALL) const;
+                 int           start_ix = PPFIRST,
+                 int           num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char*   name,
                      int           k,
                      std::vector<float>& ref,
-                     int           start_ix = FIRST,
-                     int           num_val = ALL) const;
+                     int           start_ix = PPFIRST,
+                     int           num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.
     int queryarr (const char*   name,
                   std::vector<float>& ref,
-                  int           start_ix = FIRST,
-                  int           num_val = ALL) const;
+                  int           start_ix = PPFIRST,
+                  int           num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<float>&  ptr);
@@ -681,24 +681,24 @@ public:
     void getktharr (const char*    name,
                     int            k,
                     std::vector<double>& ref,
-                    int            start_ix = FIRST,
-                    int            num_val = ALL) const;
+                    int            start_ix = PPFIRST,
+                    int            num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char*    name,
                  std::vector<double>& ref,
-                 int            start_ix = FIRST,
-                 int            num_val = ALL) const;
+                 int            start_ix = PPFIRST,
+                 int            num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char*    name,
                      int            k,
                      std::vector<double>& ref,
-                     int            start_ix = FIRST,
-                     int            num_val = ALL) const;
+                     int            start_ix = PPFIRST,
+                     int            num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.
     int queryarr (const char*    name,
                   std::vector<double>& ref,
-                  int            start_ix = FIRST,
-                  int            num_val = ALL) const;
+                  int            start_ix = PPFIRST,
+                  int            num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<double>&  ptr);
@@ -717,24 +717,24 @@ public:
     void getktharr (const char*     name,
                     int             k,
                     std::vector<std::string>& ref,
-                    int             start_ix = FIRST,
-                    int             num_val = ALL) const;
+                    int             start_ix = PPFIRST,
+                    int             num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char*     name,
                  std::vector<std::string>& ref,
-                 int             start_ix = FIRST,
-                 int             num_val = ALL) const;
+                 int             start_ix = PPFIRST,
+                 int             num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char*     name,
                      int             k,
                      std::vector<std::string>& ref,
-                     int             start_ix = FIRST,
-                     int             num_val = ALL) const;
+                     int             start_ix = PPFIRST,
+                     int             num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.2
     int queryarr (const char*     name,
                   std::vector<std::string>& ref,
-                  int             start_ix = FIRST,
-                  int             num_val = ALL) const;
+                  int             start_ix = PPFIRST,
+                  int             num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<std::string>&  ptr);
@@ -753,24 +753,24 @@ public:
     void getktharr (const char*     name,
                     int             k,
                     std::vector<IntVect>& ref,
-                    int             start_ix = FIRST,
-                    int             num_val = ALL) const;
+                    int             start_ix = PPFIRST,
+                    int             num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char*     name,
                  std::vector<IntVect>& ref,
-                 int             start_ix = FIRST,
-                 int             num_val = ALL) const;
+                 int             start_ix = PPFIRST,
+                 int             num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char*     name,
                      int             k,
                      std::vector<IntVect>& ref,
-                     int             start_ix = FIRST,
-                     int             num_val = ALL) const;
+                     int             start_ix = PPFIRST,
+                     int             num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.2
     int queryarr (const char*     name,
                   std::vector<IntVect>& ref,
-                  int             start_ix = FIRST,
-                  int             num_val = ALL) const;
+                  int             start_ix = PPFIRST,
+                  int             num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<IntVect>&  ptr);
@@ -789,24 +789,24 @@ public:
     void getktharr (const char*     name,
                     int             k,
                     std::vector<Box>& ref,
-                    int             start_ix = FIRST,
-                    int             num_val = ALL) const;
+                    int             start_ix = PPFIRST,
+                    int             num_val = PPALL) const;
     //! Same as getktharr() but searches for last occurrence of name.
     void getarr (const char*     name,
                  std::vector<Box>& ref,
-                 int             start_ix = FIRST,
-                 int             num_val = ALL) const;
+                 int             start_ix = PPFIRST,
+                 int             num_val = PPALL) const;
     //! queryktharr() is to querykth() as getktharr() is to getkth().
     int queryktharr (const char*     name,
                      int             k,
                      std::vector<Box>& ref,
-                     int             start_ix = FIRST,
-                     int             num_val = ALL) const;
+                     int             start_ix = PPFIRST,
+                     int             num_val = PPALL) const;
     //! Same as queryktharr() but searches for last occurrence of name.2
     int queryarr (const char*     name,
                   std::vector<Box>& ref,
-                  int             start_ix = FIRST,
-                  int             num_val = ALL) const;
+                  int             start_ix = PPFIRST,
+                  int             num_val = PPALL) const;
     //! Add a key 'name' with vector of values 'ptr' to the end of the PP table.
     void addarr (const char* name,
                 const std::vector<Box>&  ptr);
