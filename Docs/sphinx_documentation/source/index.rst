@@ -39,6 +39,7 @@ Documentation on migration from BoxLib is available in the AMReX repository at D
    GettingStarted_Chapter
    BuildingAMReX_Chapter
    Basics_Chapter
+   ManagingGridHierarchy_Chapter
    AmrCore_Chapter
    AmrLevel_Chapter
    AsyncIter_Chapter
@@ -50,10 +51,12 @@ Documentation on migration from BoxLib is available in the AMReX repository at D
    EB_Chapter
    GPU_Chapter
    Visualization_Chapter
+   Inputs_Chapter
    AMReX_Profiling_Tools_Chapter
    External_Profiling_Tools_Chapter
    External_Frameworks_Chapter
-
+   Regression_Testing_Chapter
+   
 .. toctree::
    :maxdepth: 1
    :caption: API
@@ -70,8 +73,7 @@ Indices and tables
 
 The copyright notice of AMReX is included in the AMReX home directory
 as README.txt.
-Your use of this software is under a 3-clause BSD license with
-additional modification -- the license agreement is included in the
+Your use of this software is under the 3-clause BSD license -- the license agreement is included in the
 AMReX home directory as license.txt.
 
 For a pdf version of this documentation, click :download:`here <amrex.pdf>`.

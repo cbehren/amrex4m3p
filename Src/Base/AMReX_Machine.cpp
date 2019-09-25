@@ -41,10 +41,7 @@ Coord read_df_node_coord (const std::string & name)
     }
 
     int group = 0;
-    if (name == "edison") {
-        group = cabx / 2 + caby * 4; // 2 cabinets per group, 4 groups per row
-        if (group > 12) { group--; } // nominal "group 12" is missing
-    } else if (name == "cori") {
+    if (name == "cori") {
         group = cabx / 2 + caby * 6; // 2 cabinets per group, 6 groups per row
     } else {
         Print() << "Could not determine group!";
@@ -58,7 +55,7 @@ Coord read_df_node_coord (const std::string & name)
 std::string get_mpi_processor_name ()
 {
     std::string result;
-#if BL_USE_MPI
+#ifdef BL_USE_MPI
     int len;
     char name[MPI_MAX_PROCESSOR_NAME];
     MPI_Get_processor_name(name, &len);
@@ -344,8 +341,7 @@ class Machine
 #ifdef AMREX_USE_CUDA
         flag_nersc_df = false;
 #else
-        flag_nersc_df = (nersc_host == "edison" ||
-                         nersc_host == "cori" ||
+        flag_nersc_df = (nersc_host == "cori" ||
                          nersc_host == "saul");
 #endif
 
@@ -376,7 +372,7 @@ class Machine
                 if (flag_verbose) {
                     Print() << "Got node ID from SLURM_TOPOLOGY_ADDR: " << result << std::endl;
                 }
-#if BL_USE_MPI
+#ifdef BL_USE_MPI
             } else {
                 auto mpi_proc_name = get_mpi_processor_name();
                 Print() << "MPI_Get_processor_name: " << mpi_proc_name << std::endl;
@@ -408,10 +404,9 @@ class Machine
     // this is collective over ALL ranks in the job
     Vector<int> get_node_ids ()
     {
-        int node_id = -1;
         Vector<int> ids(ParallelDescriptor::NProcs(), 0);
 #ifdef BL_USE_MPI
-        node_id = get_my_node_id();
+        int node_id = get_my_node_id();
         ParallelAllGather::AllGather(node_id, ids.data(), ParallelContext::CommunicatorAll());
 #endif
         if (flag_verbose) {

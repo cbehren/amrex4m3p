@@ -157,28 +157,20 @@ if (ENABLE_CONDUIT)
 endif ()
 
 
-if (ENABLE_LINEAR_SOLVERS AND (DIM EQUAL 3) AND (NOT USE_XSDK_DEFAULTS) )
-   option(ENABLE_3D_NODAL_MLMG "Enable 3D nodal MLMG" OFF)
-   print_option(ENABLE_3D_NODAL_MLMG)
-else ()
-   set(ENABLE_3D_NODAL_MLMG OFF CACHE INTERNAL "Enable 3D nodal MLMG")
-endif ()
-
 #
 # External packages
 #
 option(ENABLE_SUNDIALS "Enable SUNDIALS4 interfaces" OFF)
 print_option(ENABLE_SUNDIALS)
 
-#
-# This options are paths to external libraries installation directories
-#
-if (USE_XSDK_DEFAULTS)
-   set( ALGOIM_INSTALL_DIR "" CACHE PATH
-      "Path to Algoim installation directory")
-   set(  BLITZ_INSTALL_DIR "" CACHE PATH
-      "Path to Blitz installation directory")
+# Hypre
+if (ENABLE_LINEAR_SOLVERS)
+   option(ENABLE_HYPRE "Enable Hypre interfaces" OFF)
+   print_option(ENABLE_HYPRE)
+else ()
+   set(ENABLE_HYPRE OFF CACHE INTERNAL "Enable Hypre interfaces")
 endif ()
+
 
 #
 # Compilation options
@@ -256,28 +248,10 @@ endif()
 #
 # GPU options
 #
+
+# More CUDA options in AMReX_SetupCUDA
 option( ENABLE_CUDA "Enable GPU support via CUDA" OFF )
 print_option( ENABLE_CUDA )
-
-if (ENABLE_CUDA)
-   option( ENABLE_CUDA_FASTMATH "Enable CUDA fastmath" ON )
-   print_option(ENABLE_CUDA_FASTMATH)
-
-   option( ENABLE_CUDA_FORTRAN "Enable Fortran CUDA kernels" OFF)
-   print_option(ENABLE_CUDA_FORTRAN)
-
-   # set(CUDA_ARCH "60" CACHE STRING "CUDA architecture version")
-   # print_option(CUDA_ARCH)
-   
-   set(CUDA_MAX_THREADS "256" CACHE STRING
-      "Maximum number of CUDA threads per block" )
-   print_option(CUDA_MAX_THREADS)
-
-   set(CUDA_MAXREGCOUNT "255" CACHE STRING
-      "Limit the maximum number of registers available" )
-   print_option(CUDA_MAXREGCOUNT)
-   
-endif ()
 
 option( ENABLE_ACC  "Enable GPU support via OpenACC" OFF )
 print_option( ENABLE_ACC )
@@ -291,9 +265,4 @@ if (ENABLE_CUDA OR ENABLE_ACC)
    set(GPUS_PER_NODE "IGNORE" CACHE STRING
       "Number of GPUs per node" )
    print_option(GPUS_PER_NODE)
-endif ()
-
-   
-if (ENABLE_CUDA AND ENABLE_OMP)
-   message(FATAL_ERROR "ENABLE_CUDA and ENABLE_OMP are both set to ON")
 endif ()

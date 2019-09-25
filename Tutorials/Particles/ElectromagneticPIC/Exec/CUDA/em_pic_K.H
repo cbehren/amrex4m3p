@@ -6,7 +6,7 @@
 #include <AMReX_FArrayBox.H>
 #include <cmath>
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void gather_fields (EMParticleContainer::ParticleType const& p,
                     amrex::Real& Exp, amrex::Real& Eyp, amrex::Real& Ezp,
                     amrex::Real& Bxp, amrex::Real& Byp, amrex::Real& Bzp,
@@ -86,9 +86,36 @@ void gather_fields (EMParticleContainer::ParticleType const& p,
             }
         }
     }            
+
+    Bxp = 0.;
+    for         (int ll = izmin0 ; ll <= izmax0 ; ++ll) {
+        for     (int kk = iymin0 ; kk <= iymax0 ; ++kk) {
+            for (int jj = ixmin  ; jj <= ixmax+1; ++jj) {
+                Bxp += sx[jj]*sy0[kk]*sz0[ll]*Bxarr(j+jj,k0+kk,l0+ll);
+            }
+        }
+    }            
+
+    Byp = 0.;
+    for         (int ll = izmin0; ll <= izmax0  ; ++ll) {
+        for     (int kk = iymin ; kk <= iymax +1; ++kk) {
+            for (int jj = ixmin0; jj <= ixmax0  ; ++jj) {
+                Byp += sx0[jj]*sy[kk]*sz0[ll]*Byarr(j0+jj,k+kk,l0+ll);
+            }
+        }
+    }            
+
+    Bzp = 0.;
+    for         (int ll = izmin ; ll <= izmax +1; ++ll) {
+        for     (int kk = iymin0; kk <= iymax0  ; ++kk) {
+            for (int jj = ixmin0; jj <= ixmax0  ; ++jj) {
+                Bzp += sx0[jj]*sy0[kk]*sz[ll]*Bzarr(j0+jj,k0+kk,l+ll);
+            }
+        }
+    }                
 }
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_momentum_boris(amrex::Real& uxp, amrex::Real& uyp, amrex::Real& uzp, amrex::Real& gaminv,
                          amrex::Real Exp, amrex::Real Eyp, amrex::Real Ezp,
                          amrex::Real Bxp, amrex::Real Byp, amrex::Real Bzp,
@@ -127,17 +154,17 @@ void push_momentum_boris(amrex::Real& uxp, amrex::Real& uyp, amrex::Real& uzp, a
     gaminv = 1.0/std::sqrt(1.0+usq);    
 }
 
-AMREX_GPU_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_position_boris(EMParticleContainer::ParticleType& p,
                          amrex::Real uxp, amrex::Real uyp, amrex::Real uzp,
                          amrex::Real gaminv, amrex::Real dt)
 {
     p.pos(0) += uxp*gaminv*dt;
     p.pos(1) += uyp*gaminv*dt;
-    p.pos(2) += uzp*gaminv*dt;    
+    p.pos(2) += uzp*gaminv*dt;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void deposit_current (amrex::Array4<amrex::Real> const& jx,
                       amrex::Array4<amrex::Real> const& jy,
                       amrex::Array4<amrex::Real> const& jz,
@@ -201,7 +228,7 @@ void deposit_current (amrex::Array4<amrex::Real> const& jx,
     }
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_electric_field_x (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& Ex,
                             amrex::Array4<amrex::Real const> const& By,
@@ -214,7 +241,7 @@ void push_electric_field_x (int j, int k, int l,
         - mudt  * jx(j,k,l);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_electric_field_y (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& Ey,
                             amrex::Array4<amrex::Real const> const& Bx,
@@ -227,7 +254,7 @@ void push_electric_field_y (int j, int k, int l,
         - mudt  * jy(j,k,l);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_electric_field_z (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& Ez,
                             amrex::Array4<amrex::Real const> const& Bx,
@@ -240,7 +267,7 @@ void push_electric_field_z (int j, int k, int l,
         - mudt  * jz(j,k,l);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_magnetic_field_x (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& Bx,
                             amrex::Array4<amrex::Real const> const& Ey,
@@ -251,7 +278,7 @@ void push_magnetic_field_x (int j, int k, int l,
                           + dtsdz * (Ey(j  ,k  ,l+1) - Ey(j,k,l));
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_magnetic_field_y (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& By,
                             amrex::Array4<amrex::Real const> const& Ex,
@@ -262,7 +289,7 @@ void push_magnetic_field_y (int j, int k, int l,
                           - dtsdz * (Ex(j  ,k  ,l+1) - Ex(j,k,l));
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void push_magnetic_field_z (int j, int k, int l,
                             amrex::Array4<amrex::Real      > const& Bz,
                             amrex::Array4<amrex::Real const> const& Ex,
@@ -273,7 +300,7 @@ void push_magnetic_field_z (int j, int k, int l,
                           + dtsdy * (Ex(j  ,k+1,l  ) - Ex(j,k,l));
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real
 check_langmuir_solution (amrex::Box const& bx, amrex::Box const& test_box,
                          amrex::FArrayBox const& jxfab, amrex::Real j_exact)

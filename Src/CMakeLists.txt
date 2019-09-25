@@ -11,11 +11,34 @@ add_library( amrex )
 set_target_properties( amrex
    PROPERTIES
    Fortran_MODULE_DIRECTORY
-   ${PROJECT_BINARY_DIR}/mod_files 
+   ${PROJECT_BINARY_DIR}/mod_files
    INTERFACE_INCLUDE_DIRECTORIES
    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/mod_files>
    )
-   
+
+# Load Flags targets and use them if no user-defined flags is given
+include(AMReXFlagsTargets)
+
+if (NOT CMAKE_Fortran_FLAGS)
+   target_link_libraries(amrex
+      PUBLIC
+      $<BUILD_INTERFACE:Flags_Fortran>
+      )
+endif ()
+
+if (NOT CMAKE_CXX_FLAGS)
+   target_link_libraries(amrex
+      PUBLIC
+      $<BUILD_INTERFACE:Flags_CXX>
+      )
+endif ()
+
+if (ENABLE_FPE)
+   target_link_libraries(amrex
+      PUBLIC
+      $<BUILD_INTERFACE:Flags_FPE>
+      )
+endif ()
 
 # General configuration
 include ( AMReX_Config )
@@ -33,14 +56,21 @@ add_subdirectory(Amr)
 # Optional components
 #
 if (ENABLE_EB)
+   if (ENABLE_CUDA AND ( "${NVCC_VERSION_MAJOR}.${NVCC_VERSION_MINOR}" VERSION_EQUAL "9.2") )
+      message(FATAL_ERROR "EB component of AMReX is not compatible with CUDA 9.2")
+   endif ()
    add_subdirectory(EB)
 endif ()
 
 if (ENABLE_LINEAR_SOLVERS)
    add_subdirectory(LinearSolvers)
+   target_link_libraries(amrex
+      PUBLIC
+      $<BUILD_INTERFACE:Flags_Fortran_REQUIRED>
+      )
 endif ()
 
-if (ENABLE_FORTRAN_INTERFACES) 
+if (ENABLE_FORTRAN_INTERFACES)
    add_subdirectory(F_Interfaces)
 endif ()
 
@@ -50,17 +80,17 @@ endif ()
 
 #
 # Optional external components
-# 
+#
 if (ENABLE_AMRDATA)
    add_subdirectory(Extern/amrdata)
+   target_link_libraries(amrex
+      PUBLIC
+      $<BUILD_INTERFACE:Flags_Fortran_REQUIRED>
+      )
 endif()
 
 if (ENABLE_PROFPARSER)
    add_subdirectory(Extern/ProfParser)
-endif ()
-
-if (ENABLE_3D_NODAL_MLMG)
-   add_subdirectory(Extern/Algoim)
 endif ()
 
 if (ENABLE_SENSEI_INSITU)
@@ -68,38 +98,23 @@ if (ENABLE_SENSEI_INSITU)
 endif ()
 
 if (ENABLE_SUNDIALS)
-   add_subdirectory(Extern/SUNDIALS4)   
+   add_subdirectory(Extern/SUNDIALS4)
 endif ()
 
 if (ENABLE_CONDUIT)
    add_subdirectory(Extern/Conduit)
 endif ()
 
-#
-# Here we generate AMReX_BuildInfo.cpp
-# If Python < 2.7, script won't work so
-# we do not include this in the library
-#
-#
-# Check for Python >= 2.7: this is needed to build AMReX_BuildInfo.cpp
-# This is not a required package. This provides PYTHONINTERP_FOUND and
-# PYTHON_VERSION_STRING, PYTHON_VERSION_MAJOR and PYTHON_VERSION_MINOR
-#
-find_package (PythonInterp QUIET)
-
-if ( (NOT (PYTHON_VERSION_STRING VERSION_LESS "2.7") ) AND PYTHONINTERP_FOUND )
-   add_custom_command(
-      COMMAND  ${PROJECT_SOURCE_DIR}/Tools/C_scripts/makebuildinfo_C.py
-      --amrex_home "${PROJECT_SOURCE_DIR}"
-      --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
-      --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
-      #--GIT ". ${AMREX_GIT}"
-      OUTPUT AMReX_buildInfo.cpp
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Generating AMReX_buildInfo.cpp" )
-  
-   target_sources( amrex PRIVATE  ${CMAKE_CURRENT_BINARY_DIR}/AMReX_buildInfo.cpp )
+if (ENABLE_HYPRE)
+   add_subdirectory(Extern/HYPRE)
 endif ()
+
+
+#
+# Print out summary -- do it here so we already linked all
+# libs at this point
+#  
+print_amrex_configuration_summary ()
 
 #
 # Make all headers as PUBLIC HEADERS so that they get installed
@@ -111,7 +126,7 @@ list(FILTER AMREX_PUBLIC_HEADERS INCLUDE REGEX "\\.H")
 set_target_properties( amrex PROPERTIES PUBLIC_HEADER "${AMREX_PUBLIC_HEADERS}")
 
 #
-# If ENABLE_CUDA, make C++ files be compiled as CUDA sources 
+# If ENABLE_CUDA, make C++ files be compiled as CUDA sources
 #
 if (ENABLE_CUDA)
    set(AMREX_CUDA_SOURCES ${AMREX_SOURCES})
@@ -121,9 +136,7 @@ endif ()
 
 
 #
-# Install amrex
-# 
+# Install amrex  -- Export
+#
 include(AMReXInstallHelpers)
-install_amrex()
-
-
+install_amrex(Flags_CXX Flags_Fortran Flags_FPE)

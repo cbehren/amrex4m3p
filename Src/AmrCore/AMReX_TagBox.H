@@ -34,24 +34,16 @@ public:
     //! Possible values for each cell.
     enum TagVal { CLEAR=0, BUF, SET };
 
-    /**
-    * \brief Construct an invalid TagBox with no memory.
-    */
     TagBox () noexcept;
 
-    /**
-    * \brief Construct a TagBox on Box bx with number of components n.
-    *
-    * \param bx
-    * \param n
-    * \param alloc
-    * \param shared
-    */
-    explicit TagBox (const Box& bx, int n = 1, bool alloc = true, bool shared = false);
+    explicit TagBox (Arena* ar) noexcept;
 
-#ifdef AMREX_USE_GPU
-    TagBox (const TagBox& rhs, MakeType make_type);
-#endif
+    TagBox (const Box& bx, int n, Arena* ar);
+
+    explicit TagBox (const Box& bx, int n = 1, bool alloc = true,
+                     bool shared = false, Arena* ar = nullptr);
+
+    TagBox (const TagBox& rhs, MakeType make_type, int scomp, int ncomp);
 
     ~TagBox () = default;
 
@@ -69,7 +61,7 @@ public:
     * \param ratio
     * \param owner
     */
-    void coarsen (const IntVect& ratio, bool owner) noexcept;
+    void coarsen (const IntVect& ratio) noexcept;
 
     /**
     * \brief Mark neighbors of every tagged cell a distance nbuff away
@@ -79,7 +71,7 @@ public:
     * \param nbuff
     * \param nwid
     */
-    void buffer (int nbuff, int nwid) noexcept;
+    void buffer (const IntVect& nbuf, const IntVect& nwid) noexcept;
 
     /**
     * \brief Tag cells on intersect with src if corresponding src cell is tagged.
@@ -186,6 +178,7 @@ public:
     * \param _ngrow
     */
     TagBoxArray (const BoxArray& bs, const DistributionMapping& dm, int _ngrow=0);
+    TagBoxArray (const BoxArray& bs, const DistributionMapping& dm, const IntVect& _ngrow);
 
     ~TagBoxArray () override = default;
 
@@ -199,14 +192,14 @@ public:
     /**
     * \brief Returns the grow factor for the TagBoxArray.
     */
-    int borderSize () const noexcept;
+    IntVect borderSize () const noexcept;
 
     /**
     * \brief Calls buffer() on all contained TagBoxes.
     *
     * \param nbuf
     */
-    void buffer (int nbuf);
+    void buffer (const IntVect& nbuf);
 
     /**
     * \brief Map tagged cells through a periodic boundary to other grids in

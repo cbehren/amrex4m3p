@@ -44,8 +44,9 @@ else
 endif
 CFLAGS   += -std=c99
 
-F90FLAGS += -module $(fmoddir) -I$(fmoddir) -implicitnone
-FFLAGS   += -module $(fmoddir) -I$(fmoddir)
+F90FLAGS += -implicitnone
+
+FMODULES = -module $(fmoddir) -I$(fmoddir)
 
 ########################################################################
 
@@ -59,7 +60,7 @@ ifeq ($(USE_OMP),TRUE)
   endif
 endif
 
-CXXFLAGS += $(GENERIC_COMP_FLAGS)
+CXXFLAGS += $(GENERIC_COMP_FLAGS) -pthread
 CFLAGS   += $(GENERIC_COMP_FLAGS)
 FFLAGS   += $(GENERIC_COMP_FLAGS)
 F90FLAGS += $(GENERIC_COMP_FLAGS)

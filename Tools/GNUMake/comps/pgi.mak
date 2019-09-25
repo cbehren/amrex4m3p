@@ -38,6 +38,10 @@ else
   GENERIC_PGI_FLAGS += -noacc
 endif
 
+# Note that -O2 is the default optimization level for PGI
+
+PGI_OPT := -O2 -fast
+
 ########################################################################
 ########################################################################
 ########################################################################
@@ -52,9 +56,9 @@ CC  = pgcc
 CXXFLAGS =
 CFLAGS   =
 
-# Note that -O2 is the default optimization level for PGI
+# Allow -gopt to be disabled to work around a compiler bug on P9.
 
-PGI_OPT := -O2 -fast
+PGI_GOPT ?= TRUE
 
 ifeq ($(DEBUG),TRUE)
 
@@ -65,11 +69,19 @@ ifeq ($(DEBUG),TRUE)
 
 else
 
-  CXXFLAGS += -gopt $(PGI_OPT)
-  CFLAGS   += -gopt $(PGI_OPT)
+  CXXFLAGS += $(PGI_OPT)
+  CFLAGS   += $(PGI_OPT)
+
+  ifeq ($(PGI_GOPT),TRUE)
+
+    CXXFLAGS += -gopt
+    CFLAGS   += -gopt
+
+  endif
 
 endif
 
+# The logic here should be consistent with what's in nvcc.mak
 ifeq ($(shell expr $(gcc_major_version) \>= 5), 1)
   CXXFLAGS += -std=c++14
 else ifeq ($(shell expr $(gcc_major_version) \>= 4), 1)
@@ -108,8 +120,15 @@ ifeq ($(DEBUG),TRUE)
 
 else
 
-  FFLAGS   += -gopt $(PGI_OPT)
-  F90FLAGS += -gopt $(PGI_OPT)
+  FFLAGS   += $(PGI_OPT)
+  F90FLAGS += $(PGI_OPT)
+
+  ifeq ($(PGI_GOPT),TRUE)
+
+    FFLAGS   += -gopt
+    F90FLAGS += -gopt
+
+  endif
 
 endif
 
@@ -150,8 +169,10 @@ endif
 
 ########################################################################
 
-F90FLAGS += -module $(fmoddir) -I$(fmoddir) -Mdclchk
-FFLAGS   += -module $(fmoddir) -I$(fmoddir) -Mextend
+F90FLAGS += -Mdclchk
+FFLAGS   += -Mextend
+
+FMODULES = -module $(fmoddir) -I$(fmoddir)
 
 ########################################################################
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
 import os
 import shlex
@@ -41,12 +42,13 @@ def compiletesting(arg_string):
                      'Tutorials/EB/LevelSet/Exec',
                      'Tutorials/LinearSolvers/ABecLaplacian_C',
                      'Tutorials/LinearSolvers/ABecLaplacian_F',
-                     'Tutorials/Particles/LoadBalance',
+                     'Tutorials/Particles/CellSortedParticles',
+#                     'Tutorials/Particles/ElectromagneticPIC',
+#                     'Tutorials/Particles/ElectrostaticPIC',
                      'Tutorials/Particles/NeighborList',
-                     'OldTutorials/DataServicesTest0',
+                     'Tests/DataServicesTest0',
 #                     'OldTutorials/MultiColor_C',
                      'OldTutorials/MultiFabTests_C',
-                     'OldTutorials/MultiGrid_C',
                      'OldTutorials/Tiling_C',
                      'OldTutorials/Tiling_Heat_C',
                      'OldTutorials/WaveEquation_C',
@@ -57,11 +59,8 @@ def compiletesting(arg_string):
                      'Tests/LinearSolvers/CellEB',
                      'Tests/LinearSolvers/CellEB2',
                      'Tests/LinearSolvers/C_CellMG',
-                     'Tests/LinearSolvers/ComparisonTest',
                      'Tests/LinearSolvers/C_TensorMG',
-                     'Tests/MKDir',
-                     'OldMiniApps/FillBoundary',
-                     'OldMiniApps/MultiGrid_C']
+                     'Tests/MKDir']
 
     else:
         test_list = ['Tutorials/Amr/Advection_AmrCore/Exec/SingleVortex',
@@ -71,10 +70,9 @@ def compiletesting(arg_string):
                      'Tutorials/LinearSolvers/ABecLaplacian_F',
                      'Tutorials/Particles/NeighborList',
                      'Tests/NoFort',
-                     'Tests/LinearSolvers/CellEB2',
-                     'Tests/LinearSolvers/ComparisonTest']
+                     'Tests/LinearSolvers/CellEB2']
 
-    print "Test List: ", test_list
+    print("Test List: ", test_list)
 
     TOP = os.getcwd()
 
@@ -82,7 +80,7 @@ def compiletesting(arg_string):
 
     failed_tests = []
     for test in test_list:
-        print "Compile", test
+        print("Compile", test)
         os.chdir(os.path.join(TOP,test))
         
         command = "make realclean"
@@ -110,22 +108,22 @@ def compiletesting(arg_string):
                     test_success = t > start_time
 
         if test_success:
-            print ("    success")
+            print("    success")
         else:
-            print ("    failed")
+            print("    failed")
             failed_tests.append(test)
 
-    print ""
+    print("")
 
     os.chdir(TOP)
     if failed_tests:
-        print "Failed tests: ", failed_tests
+        print("Failed tests: ", failed_tests)
         f = open("failed_tests", 'w')
         for t in failed_tests:
             f.write(t+"\n")
         f.close()
     else:
-        print "Compile tests passed."
+        print("Compile tests passed.")
 
 def run(command, outfile=None):
 
@@ -138,17 +136,17 @@ def run(command, outfile=None):
     p0.stderr.close()
 
     if outfile:
-        try: cf = open(outfile, 'w')
+        try: cf = open(outfile, 'wb')
         except IOError:
-            print "ERROR: unable to open file for writing"
+            print("ERROR: unable to open file for writing")
         else:
             cf.write(stdout0)
             cf.write(stderr0)
             cf.close()
     else:
-        print "    ", stdout0
+        print("    ", stdout0)
         if stderr0:
-            print "    ", stderr0
+            print("    ", stderr0)
 
     return rc
 

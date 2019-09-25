@@ -16,11 +16,22 @@ class AmrMesh
 {
 public:
     AmrMesh ();
-    AmrMesh (const RealBox* rb, int max_level_in, const Vector<int>& n_cell_in, int coord=-1,
-             std::vector<int> refrat = std::vector<int>());
+
+    AmrMesh (const RealBox* rb, int max_level_in,
+             const Vector<int>& n_cell_in, int coord=-1,
+             Vector<IntVect> refrat = Vector<IntVect>(),
+             const int* is_per = nullptr);
+
+    AmrMesh (const RealBox& rb, int max_level_in,
+             const Vector<int>& n_cell_in, int coord,
+             Vector<IntVect> const& ref_ratios,
+             Array<int,AMREX_SPACEDIM> const& is_per);
 
     AmrMesh (const AmrMesh& rhs) = delete;
     AmrMesh& operator= (const AmrMesh& rhs) = delete;
+
+    AmrMesh (AmrMesh&& rhs) = default;
+    AmrMesh& operator= (AmrMesh&& rhs) = default;
 
     virtual ~AmrMesh ();
 
@@ -92,12 +103,16 @@ public:
     void SetFinestLevel (int new_finest_level) noexcept { finest_level = new_finest_level; }
     void SetDistributionMap (int lev, const DistributionMapping& dmap_in) noexcept;
     void SetBoxArray (int lev, const BoxArray& ba_in) noexcept;
+    void SetGeometry (int lev, const Geometry& geom_in) noexcept;
 
     void ClearDistributionMap (int lev) noexcept;
     void ClearBoxArray (int lev) noexcept;
 
-    //! Return the number of buffer cells in error estimator.
-    int nErrorBuf (int lev) const noexcept { return n_error_buf[lev]; }
+    //! Return the number of buffer cells (as a single integer) in error estimator.
+    int nErrorBuf (int lev, int direction = 0) const noexcept { return n_error_buf[lev][direction]; }
+
+    //! Return the number of buffer cells (as an IntVect) in error estimator.
+    const IntVect& nErrorBufVect (int lev) const noexcept { return n_error_buf[lev]; }
 
     //! Return the minimum allowable grid efficiency.
     Real gridEff () const noexcept { return grid_eff; }
@@ -165,14 +180,14 @@ public:
 protected:
 
     int              verbose;
-    int              max_level;    //!< Maximum allowed level.
-    Vector<IntVect>   ref_ratio;    //!< Refinement ratios [0:finest_level-1]
+    int              max_level;       //!< Maximum allowed level.
+    Vector<IntVect>  ref_ratio;       //!< Refinement ratios [0:finest_level-1]
 
-    int              finest_level; //!< Current finest level.
+    int              finest_level;    //!< Current finest level.
 
-    Vector<int>       n_error_buf;     //!< Buffer cells around each tagged cell.
-    Vector<IntVect>   blocking_factor; //!< Blocking factor in grid generation (by level).
-    Vector<IntVect>   max_grid_size;   //!< Maximum allowable grid size (by level).
+    Vector<IntVect>  n_error_buf;     //!< Buffer cells around each tagged cell.
+    Vector<IntVect>  blocking_factor; //!< Blocking factor in grid generation (by level).
+    Vector<IntVect>  max_grid_size;   //!< Maximum allowable grid size (by level).
     Real             grid_eff;        //!< Grid efficiency.
     int              n_proper;        //!< # cells required for proper nesting.
 
@@ -201,9 +216,12 @@ protected:
 
 private:
     void InitAmrMesh (int max_level_in, const Vector<int>& n_cell_in,
-                      std::vector<int> refrat = std::vector<int>());
+                      Vector<IntVect> refrat = Vector<IntVect>(),
+                      const RealBox* rb = nullptr, int coord = -1,
+                      const int* is_per = nullptr);
 
-    static void ProjPeriodic (BoxList& bd, const Geometry& geom);
+    static void ProjPeriodic (BoxList& bd, const Box& domain,
+                              Array<int,AMREX_SPACEDIM> const& is_per);
 };
 
 }

@@ -31,7 +31,7 @@
 #include <AMReX_MultiFabUtil.H>
 #include <AMReX_NFiles.H>
 #include <AMReX_VectorIO.H>
-#include <AMReX_Particles_F.H>
+#include <AMReX_Particle_mod_K.H>
 #include <AMReX_ParticleMPIUtil.H>
 #include <AMReX_StructOfArrays.H>
 #include <AMReX_ArrayOfStructs.H>
@@ -41,6 +41,11 @@
 #include <AMReX_CudaContainers.H>
 #include <AMReX_Functors.H>
 #include <AMReX_ParticleUtil.H>
+#include <AMReX_ParticleReduce.H>
+#include <AMReX_ParticleBufferMap.H>
+#include <AMReX_ParticleCommunication.H>
+#include <AMReX_ParticleLocator.H>
+#include <AMReX_Scan.H>
 
 #ifdef BL_LAZY
 #include <AMReX_Lazy.H>
@@ -107,20 +112,26 @@ struct ParticleLocData
 ///
 template<int NStructReal, int NStructInt, int NArrayReal, int NArrayInt>
 struct ParticleInitType
-    {
-        std::array<double, NStructReal> real_struct_data;
-        std::array<int,    NStructInt > int_struct_data;
-        std::array<double, NArrayReal > real_array_data;
-        std::array<int,    NArrayInt  > int_array_data;
-    };
+{
+    std::array<double, NStructReal> real_struct_data;
+    std::array<int,    NStructInt > int_struct_data;
+    std::array<double, NArrayReal > real_array_data;
+    std::array<int,    NArrayInt  > int_array_data;
+};
 
 template <bool is_const, int NStructReal, int NStructInt, int NArrayReal, int NArrayInt>
 class ParIterBase;
 
-    /**
-     * \brief A distributed container for Particles sorted onto grids and tiles.
+template <int NStructReal, int NStructInt, int NArrayReal, int NArrayInt>
+class ParIter;
 
-     */
+template <int NStructReal, int NStructInt, int NArrayReal, int NArrayInt>
+class ParConstIter;
+    
+/**
+ * \brief A distributed container for Particles sorted onto grids and tiles.
+ 
+ */
 template <int NStructReal, int NStructInt=0, int NArrayReal=0, int NArrayInt=0>
 class ParticleContainer
 {
@@ -131,12 +142,13 @@ public:
     //
     //! The type of Particles we hold.
     using ParticleType = Particle<NStructReal, NStructInt>;
+    using SuperParticleType = Particle<NStructReal+NArrayReal, NStructInt+NArrayInt>;
     using RealType = typename Particle<NStructReal, NStructInt>::RealType;
 
 #ifdef BL_SINGLE_PRECISION_PARTICLES
     RealDescriptor ParticleRealDescriptor = FPC::Native32RealDescriptor();
 #else
-    RealDescriptor ParticleRealDescriptor = FPC::NativeRealDescriptor();
+    RealDescriptor ParticleRealDescriptor = FPC::Native64RealDescriptor();
 #endif
 
     using ParticleContainerType = ParticleContainer<NStructReal, NStructInt, NArrayReal, NArrayInt>;
@@ -149,19 +161,23 @@ public:
     using AoS = typename ParticleTileType::AoS;
     using SoA = typename ParticleTileType::SoA;
 
-    using RealVector     = typename SoA::RealVector;
-    using IntVector      = typename SoA::IntVector;
-    using ParticleVector = typename AoS::ParticleVector;
-    using CharVector     = Gpu::ManagedDeviceVector<char>;
-    using SendBuffer     = Gpu::PolymorphicDeviceVector<char>;
-
-
+    using RealVector       = typename SoA::RealVector;
+    using IntVector        = typename SoA::IntVector;
+    using ParticleVector   = typename AoS::ParticleVector;
+    using CharVector       = Gpu::ManagedDeviceVector<char>;
+    using SendBuffer       = Gpu::PolymorphicDeviceVector<char>;
+    using ParIterType      = ParIter<NStructReal, NStructInt, NArrayReal, NArrayInt>;
+    using ParConstIterType = ParConstIter<NStructReal, NStructInt, NArrayReal, NArrayInt>;
+    
     ParticleContainer ()
       :
       communicate_real_comp(NArrayReal, true),
       communicate_int_comp(NArrayInt, true),
       m_verbose(0),
-      m_gdb(nullptr)
+      m_gdb(nullptr),
+      m_runtime_comps_defined(false),
+      m_num_runtime_real(0),
+      m_num_runtime_int(0)        
     {
         Initialize ();
     }
@@ -171,7 +187,10 @@ public:
         communicate_real_comp(NArrayReal, true),
         communicate_int_comp(NArrayInt, true),
 	m_verbose(0),
-	m_gdb(gdb)
+	m_gdb(gdb),
+        m_runtime_comps_defined(false),
+        m_num_runtime_real(0),
+        m_num_runtime_int(0)
     {
         Initialize ();
         reserveData();
@@ -185,7 +204,10 @@ public:
         communicate_real_comp(NArrayReal, true),
         communicate_int_comp(NArrayInt, true),
         m_verbose(0),
-	m_gdb_object(geom,dmap,ba)
+	m_gdb_object(geom,dmap,ba),
+        m_runtime_comps_defined(false),
+        m_num_runtime_real(0),
+        m_num_runtime_int(0)
     {
         Initialize ();
         m_gdb = & m_gdb_object;
@@ -202,7 +224,10 @@ public:
         communicate_real_comp(NArrayReal, true),
         communicate_int_comp(NArrayInt, true),
         m_verbose(0),
-	m_gdb_object(geom,dmap,ba,rr)
+	m_gdb_object(geom,dmap,ba,rr),
+        m_runtime_comps_defined(false),
+        m_num_runtime_real(0),
+        m_num_runtime_int(0)
     {
         Initialize ();
         m_gdb = & m_gdb_object;
@@ -230,7 +255,10 @@ public:
 #endif
                     ref_ratio.push_back(rr[i][0]);
                 }
-                return ref_ratio;  }() )
+                return ref_ratio;  }() ),
+        m_runtime_comps_defined(false),
+        m_num_runtime_real(0),
+        m_num_runtime_int(0)
     {
         Initialize ();
         m_gdb = & m_gdb_object;
@@ -240,6 +268,12 @@ public:
 
     virtual ~ParticleContainer () {}
 
+    ParticleContainer ( const ParticleContainer &) = delete;
+    ParticleContainer& operator= ( const ParticleContainer & ) = delete; 
+    
+    ParticleContainer ( ParticleContainer && ) = default;
+    ParticleContainer& operator= ( ParticleContainer && ) = default;
+        
     void Define (ParGDBBase* gdb)
     {
         m_gdb = gdb;
@@ -292,8 +326,10 @@ public:
 
     const ParGDBBase* GetParGDB () const { return m_gdb; }
 
-    void reserveData();
-    void resizeData();
+          ParGDBBase* GetParGDB ()       { return m_gdb; }
+    
+    void reserveData ();
+    void resizeData ();
 
     void RedefineDummyMF (int lev);
 
@@ -513,20 +549,81 @@ public:
     void ReadParticleRealData (void* data, size_t size,
                                std::istream& is, const RealDescriptor& rd);
 
-    void Checkpoint (const std::string& dir, const std::string& name, bool is_checkpoint = true,
-                     const Vector<std::string>& real_comp_names = Vector<std::string>(),
-                     const Vector<std::string>&  int_comp_names = Vector<std::string>()) const;
+    /**
+     * \brief Writes a particle checkpoint to file, suitable for restarting.
+     */
+    void Checkpoint (const std::string& dir, const std::string& name) const;
 
+    /**
+     * \brief Older form of checkpoint, for reverse compatability
+     */
+    void Checkpoint (const std::string& dir, const std::string& name, bool is_checkpoint,
+                     const Vector<std::string>& real_comp_names = Vector<std::string>(),
+                     const Vector<std::string>& int_comp_names = Vector<std::string>()) const;
+    
+    void WriteBinaryParticleData (const std::string& dir,
+                                  const std::string& name,
+                                  const Vector<int>& write_real_comp,
+                                  const Vector<int>& write_int_comp,    
+                                  const Vector<std::string>& real_comp_names,
+                                  const Vector<std::string>&  int_comp_names) const;
+    
     void CheckpointPre ();
 
     void CheckpointPost ();
 
-    void Restart (const std::string& dir, const std::string& file, bool is_checkpoint = true);
+    /**
+     *   Restart from checkpoint
+     */
+    void Restart (const std::string& dir, const std::string& file);
 
+    /**
+     *   Older version, for backwards compatability
+     */
+    void Restart (const std::string& dir, const std::string& file, bool is_checkpoint);
+    
+    /**
+     *  This version of WritePlotFile writes all components and assigns component names
+     */
+    void WritePlotFile (const std::string& dir, const std::string& name) const;
+
+    /**
+     *  This version of WritePlotFile writes all components and allows the user to specify
+     *  the names of the components.
+     */
     void WritePlotFile (const std::string& dir, const std::string& name,
-                        const Vector<std::string>& real_comp_names = Vector<std::string>(),
-                        const Vector<std::string>&  int_comp_names = Vector<std::string>()) const;
+                        const Vector<std::string>& real_comp_names,
+                        const Vector<std::string>&  int_comp_names) const;
 
+    /**
+     *  This version of WritePlotFile writes all components and allows the user to specify
+     *  the names of the components.
+     */
+    void WritePlotFile (const std::string& dir, const std::string& name,
+                        const Vector<std::string>& real_comp_names) const;
+    
+    /**
+     *  This version of WritePlotFile assigns component names, but allows the user to pass
+     *  in a vector of ints that toggle on / off the writing of specfic components.
+     */
+    void WritePlotFile (const std::string& dir,
+                        const std::string& name,
+                        const Vector<int>& write_real_comp,
+                        const Vector<int>& write_int_comp) const;
+    
+    /**
+     * \brief This is the most general version of WritePlotFile, which takes component 
+     * names and flags for whether to write each variable as components. Note that 
+     * the user should pass in vectors containing names of all the componets, whether
+     * they are written or not.
+     */
+    void WritePlotFile (const std::string& dir,
+                        const std::string& name,
+                        const Vector<int>& write_real_comp,
+                        const Vector<int>& write_int_comp,    
+                        const Vector<std::string>& real_comp_names,
+                        const Vector<std::string>&  int_comp_names) const;
+    
     void WritePlotFilePre ();
 
     void WritePlotFilePost ();
@@ -547,10 +644,10 @@ public:
     ParticleLevel      & GetParticles (int lev)       { return m_particles[lev]; }
 
     const ParticleTileType& ParticlesAt (int lev, int grid, int tile) const
-        { return m_particles[lev].at(std::make_pair(grid,tile)); }
+    { return m_particles[lev].at(std::make_pair(grid, tile)); }
 
     ParticleTileType&       ParticlesAt (int lev, int grid, int tile)
-        { return m_particles[lev].at(std::make_pair(grid, tile)); }
+    { return m_particles[lev].at(std::make_pair(grid, tile)); }
 
     template <class Iterator>
 
@@ -562,6 +659,11 @@ public:
     ParticleTileType&       ParticlesAt (int lev, const Iterator& iter)
         { return ParticlesAt(lev, iter.index(), iter.LocalTileIndex()); }
 
+    ParticleTileType& DefineAndReturnParticleTile (int lev, int grid, int tile)
+    {
+        m_particles[lev][std::make_pair(grid, tile)].define(NumRuntimeRealComps(), NumRuntimeIntComps());
+        return ParticlesAt(lev, grid, tile);
+    }
 
     /**
     * \brief Functions depending the layout of the data.  Use with caution.
@@ -662,13 +764,44 @@ public:
 
     bool OKGPU (int lev_min = 0, int lev_max = -1, int nGrow = 0) const;
 
-#ifdef AMREX_USE_CUDA
-    void RedistributeMPIGPU (std::map<int, SendBuffer>& not_ours);
-    
+#ifdef AMREX_USE_CUDA    
     void EnforcePeriodicGPU ();
 #endif
 
+    template <typename T,
+              typename std::enable_if<std::is_same<T,bool>::value,int>::type=0>
+    void AddRealComp (T communicate=true)
+    {
+        m_runtime_comps_defined = true;
+        m_num_runtime_real++;
+        communicate_real_comp.push_back(communicate);
+        SetParticleSize();
+    }
+
+    template <typename T,
+              typename std::enable_if<std::is_same<T,bool>::value,int>::type=0>
+    void AddIntComp (T communicate=true)
+    {
+        m_runtime_comps_defined = true;
+        m_num_runtime_int++;
+        communicate_int_comp.push_back(communicate);
+        SetParticleSize();
+    }
+
+    const ParticleBufferMap& BufferMap () const {return m_buffer_map;} 
+
+    const Vector<int>& NeighborProcs(int lev, int ngrow) const         
+    {
+        BuildRedistributeMask(lev, ngrow);
+        return neighbor_procs;
+    };
+
+    bool OnSameGrids (int level, const MultiFab& mf) const { return m_gdb->OnSameGrids(level, mf); }
+
 protected:
+
+    mutable amrex::Vector<int> neighbor_procs;
+    mutable bool m_need_handshake;
 
     /**
     * \brief Checks a particle's location on levels lev_min and higher.
@@ -700,10 +833,6 @@ protected:
     bool EnforcePeriodicWhere (ParticleType& prt, ParticleLocData& pld,
                                int lev_min = 0, int lev_max = -1, int local_grid=-1) const;
 
-    bool OnSameGrids (int level, const MultiFab& mf) const { return m_gdb->OnSameGrids(level, mf); }
-
-
-
     /**
     * \brief Helper function for Checkpoint() and WritePlotFile().
     *
@@ -713,31 +842,22 @@ protected:
     * \param which
     * \param count
     * \param where
-    * \param is_checkpoint
     */
-    void WriteParticles (int            level,
-                         std::ofstream& ofs,
-                         int            fnum,
-                         Vector<int>&    which,
-                         Vector<int>&    count,
-                         Vector<long>&   where,
-                         bool           is_checkpoint) const;
+    void WriteParticles (int level, std::ofstream& ofs, int fnum,
+                         Vector<int>& which, Vector<int>& count, Vector<long>& where,
+                         const Vector<int>& write_real_comp, const Vector<int>& write_int_comp) const;
 
     template <class RTYPE>
-    void ReadParticles (int            cnt,
-			int            grd,
-			int            lev,
-			bool           is_checkpoint,
-			std::ifstream& ifs);
-
-
+    void ReadParticles (int cnt, int grd, int lev, std::ifstream& ifs, int finest_level_in_file);
+    
     void SetParticleSize ();
 
     void BuildRedistributeMask(int lev, int nghost=1) const;
     mutable std::unique_ptr<iMultiFab> redistribute_mask_ptr;
     mutable int redistribute_mask_nghost = std::numeric_limits<int>::min();
-    mutable amrex::Vector<int> neighbor_procs;
 
+    void defineBufferMap () const;
+    mutable ParticleBufferMap m_buffer_map;
 
     //! The member data.
     int         m_verbose;
@@ -752,7 +872,7 @@ protected:
     int maxnextidPrePost;
     mutable int nOutFilesPrePost;
     long nparticlesPrePost;
-    Vector<long> nParticlesAtLevelPrePost;      //!< ---- [level]
+    Vector<long> nParticlesAtLevelPrePost;          //!< ---- [level]
     mutable Vector<Vector<int>>  whichPrePost;      //!< ---- [level]
     mutable Vector<Vector<int>>  countPrePost;      //!< ---- [level]
     mutable Vector<Vector<long>> wherePrePost;      //!< ---- [level]
@@ -761,8 +881,8 @@ protected:
 
 #ifdef AMREX_USE_CUDA
     ParticleVector m_aos_r;
-    RealVector m_rdata_r;
-    IntVector  m_idata_r;
+    std::array<RealVector, NArrayReal> m_rdata_r;
+    std::array<IntVector, NArrayInt>  m_idata_r;
     Gpu::ManagedDeviceVector<int> m_grids_r;
 
     Gpu::ManagedDeviceVector<int> m_lo;
@@ -773,14 +893,33 @@ protected:
     Gpu::ManagedDeviceVector<int> m_index_sequence_tmp;
 
     ParticleVector m_aos_to_redistribute;
-    std::array< RealVector, NArrayReal> m_real_arrays_to_redistribute;
-    std::array< IntVector,  NArrayInt > m_int_arrays_to_redistribute;
+    std::vector<RealVector> m_real_arrays_to_redistribute;
+    std::vector<IntVector > m_int_arrays_to_redistribute;
     Gpu::ManagedDeviceVector<int> m_grids_to_redistribute;
 
     std::map<int, SendBuffer> m_not_ours;
+
+    ParticleCopyOp redistribute_copy_op;
+    ParticleCopyPlan redistribute_copy_plan;
+    Gpu::DeviceVector<SuperParticleType> redistribute_snd_buffer;
+    Gpu::DeviceVector<SuperParticleType> redistribute_rcv_buffer;
+
+    Gpu::PinnedDeviceVector<SuperParticleType> pinned_snd_buffer;
+    Gpu::PinnedDeviceVector<SuperParticleType> pinned_rcv_buffer;
+
+    mutable ParticleLocator m_particle_locator;
+    
 #endif
 
+    int NumRuntimeRealComps () const { return m_num_runtime_real; }
+    int NumRuntimeIntComps  () const { return m_num_runtime_int;  } 
+    
+    int NumRealComps () const { return NArrayReal + NumRuntimeRealComps(); }
+    int NumIntComps  () const { return NArrayInt  + NumRuntimeIntComps() ; } 
+
+    
 private:
+
     virtual void particlePostLocate(ParticleType& p, const ParticleLocData& pld,
                                     const int lev) {};
 
@@ -795,6 +934,10 @@ private:
 
     void Initialize ();
 
+    bool m_runtime_comps_defined;
+    int m_num_runtime_real;
+    int m_num_runtime_int;
+    
     size_t particle_size, superparticle_size;
     int num_real_comm_comps, num_int_comm_comps;
     Vector<ParticleLevel> m_particles;
@@ -869,7 +1012,13 @@ public:
                                    Container& z)) const;
 
     int numParticles () const { return GetArrayOfStructs().numParticles(); }
+
+    int GetLevel () const { return m_level; }
+
+    std::pair<int, int> GetPairIndex () const { return std::make_pair(this->index(), this->LocalTileIndex()); }
+    
 protected:
+    
     int m_level;
     int m_pariter_index;
     Vector<int> m_valid_index;
@@ -933,6 +1082,7 @@ public:
 #include "AMReX_ParticleInit.H"
 #include "AMReX_ParticleContainerI.H"
 #include "AMReX_ParIterI.H"
+#include "AMReX_ParticleIO.H"
 
 }
 

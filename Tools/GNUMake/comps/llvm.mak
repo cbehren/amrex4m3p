@@ -47,12 +47,20 @@ endif
 CXXFLAGS += -std=c++14
 CFLAGS   += -std=c99
 
-FFLAGS   += -ffixed-line-length-none -fno-range-check -fno-second-underscore -J$(fmoddir) -I $(fmoddir)
-F90FLAGS += -ffree-line-length-none -fno-range-check -fno-second-underscore -J$(fmoddir) -I $(fmoddir) -fimplicit-none
+FFLAGS   += -ffixed-line-length-none -fno-range-check -fno-second-underscore
+F90FLAGS += -ffree-line-length-none -fno-range-check -fno-second-underscore -fimplicit-none
+
+FMODULES =  -J$(fmoddir) -I $(fmoddir)
 
 ########################################################################
 
 GENERIC_COMP_FLAGS =
+
+ifeq ($(EXPORT_DYNAMIC),TRUE)
+  CPPFLAGS += -DAMREX_EXPORT_DYNAMIC
+  LIBRARIES += -Xlinker -export_dynamic
+  GENERIC_COMP_FLAGS += -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
+endif
 
 ifeq ($(THREAD_SANITIZER),TRUE)
   GENERIC_COMP_FLAGS += -fsanitize=thread
@@ -65,7 +73,7 @@ ifeq ($(USE_OMP),TRUE)
   GENERIC_COMP_FLAGS += -fopenmp
 endif
 
-CXXFLAGS += $(GENERIC_COMP_FLAGS)
+CXXFLAGS += $(GENERIC_COMP_FLAGS) -pthread
 CFLAGS   += $(GENERIC_COMP_FLAGS)
 FFLAGS   += $(GENERIC_COMP_FLAGS)
 F90FLAGS += $(GENERIC_COMP_FLAGS)

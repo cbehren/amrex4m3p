@@ -16,15 +16,7 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 include ./Make.package
 
-Pdirs 	:= Base Boundary AmrCore LinearSolvers/C_CellMG LinearSolvers/MLMG
-
-ifeq ($(USE_HYPRE),TRUE)
-    Pdirs += Extern/HYPRE
-endif
-
-ifeq ($(USE_PETSC),TRUE)
-    Pdirs += Extern/PETSc
-endif
+Pdirs 	:= Base Boundary AmrCore LinearSolvers/MLMG
 
 Ppack	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 

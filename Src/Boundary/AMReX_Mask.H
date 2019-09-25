@@ -28,38 +28,41 @@ class Mask
 {
 public:
 
-    /**
-    * \brief default constructor
-    */
     Mask () noexcept;
 
-    /**
-    * \brief allocating constructor (nc=number of components)
-    *
-    * \param bx
-    * \param nc
-    * \param alloc
-    * \param shared
-    */
+    explicit Mask (Arena* ar) noexcept;
+
+    Mask (const Box& bx, int nc, Arena* ar);
+
     explicit Mask (const Box& bx,
 		   int        nc = 1,
 		   bool       alloc=true,
-		   bool       shared=false);
+		   bool       shared=false,
+                   Arena*     ar = nullptr);
 
     /**
     * \brief construct from input stream
-    *
-    * \param is
     */
     explicit Mask (std::istream& is);
 
-    ~Mask () = default;
+    AMREX_GPU_HOST_DEVICE
+    explicit Mask (Array4<int> const& a) noexcept : BaseFab<int>(a) {}
+
+    AMREX_GPU_HOST_DEVICE
+    explicit Mask (Array4<int> const& a, IndexType t) noexcept : BaseFab<int>(a,t) {}
+
+    AMREX_GPU_HOST_DEVICE
+    explicit Mask (Array4<int const> const& a) noexcept : BaseFab<int>(a) {}
+
+    AMREX_GPU_HOST_DEVICE
+    explicit Mask (Array4<int const> const& a, IndexType t) noexcept : BaseFab<int>(a,t) {}
+
+    AMREX_GPU_HOST_DEVICE
+    ~Mask () noexcept {};
 
     Mask (Mask&& rhs) noexcept = default;
 
-#ifdef AMREX_USE_GPU
-    Mask (Mask const& rhs, MakeType make_type);
-#endif
+    Mask (Mask const& rhs, MakeType make_type, int scomp, int ncomp);
 
     Mask (const Mask&) = delete;
     Mask& operator= (const Mask&) = delete;
@@ -208,14 +211,14 @@ public:
               int         numcomp = 1) noexcept;
 };
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::And (const Mask& src) noexcept
 {
     return this->And(src,domain,domain,0,0,nvar);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::And (const Mask& src,
            int         srccomp,
@@ -225,7 +228,7 @@ Mask::And (const Mask& src,
     return this->And(src,domain,domain,srccomp,destcomp,numcomp);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::And (const Mask& src,
            const Box&  subbox,
@@ -236,7 +239,7 @@ Mask::And (const Mask& src,
     return this->And(src,subbox,subbox,srccomp,destcomp,numcomp);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::And (const Mask& src,
            const Box&  srcbox,
@@ -265,14 +268,14 @@ Mask::And (const Mask& src,
     return *this;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::Or (const Mask& src) noexcept
 {
     return this->Or(src,domain,domain,0,0,nvar);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::Or (const Mask& src,
           int         srccomp,
@@ -282,7 +285,7 @@ Mask::Or (const Mask& src,
     return this->Or(src,domain,domain,srccomp,destcomp,numcomp);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::Or (const Mask& src,
           const Box&  subbox,
@@ -293,7 +296,7 @@ Mask::Or (const Mask& src,
     return this->Or(src,subbox,subbox,srccomp,destcomp,numcomp);
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Mask&
 Mask::Or (const Mask& src,
           const Box&  srcbox,

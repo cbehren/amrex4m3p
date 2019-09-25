@@ -5,6 +5,7 @@
 #include <limits>
 #include <memory>
 #include <cstddef>
+#include <iostream>
 
 #include <AMReX.H>
 #include <AMReX_Array.H>
@@ -48,6 +49,21 @@ class DistributionMapping
     //! The default constructor.
     DistributionMapping ();
 
+    //! The copy constructor.
+    DistributionMapping (const DistributionMapping& rhs) = default;
+
+    //! The copy assignment operator.
+    DistributionMapping& operator= (const DistributionMapping& rhs) = default;
+
+    //! The move constructor.
+    DistributionMapping (DistributionMapping&& rhs) noexcept = default;
+
+    //! The move assignment operator.
+    DistributionMapping& operator= (DistributionMapping&& rhs) noexcept = default;
+
+   //! The destructor.
+    ~DistributionMapping() noexcept = default;
+
     /**
     * \brief Create an object with the specified mapping.
     */
@@ -62,18 +78,6 @@ class DistributionMapping
     */
     DistributionMapping (const DistributionMapping& d1,
                          const DistributionMapping& d2);
-
-    //! The destructor.
-    ~DistributionMapping ();
-
-    //! Copy constructor.
-    DistributionMapping (const DistributionMapping& rhs);
-
-    //! Assignment operator.
-    DistributionMapping& operator= (const DistributionMapping& rhs);
-
-    //! Move constructor.
-    DistributionMapping (DistributionMapping&& rhs) noexcept;
 
     /**
     * \brief Build mapping out of BoxArray over nprocs processors.
@@ -105,6 +109,10 @@ class DistributionMapping
 
     //! Equivalent to ProcessorMap()[index].
     int operator[] (int index) const noexcept { return m_ref->m_pmap[index]; }
+
+    std::istream& readFrom (std::istream& is);
+
+    std::ostream& writeOn (std::ostream& os) const;
 
     //! Set/get the distribution strategy.
     static void strategy (Strategy how);
