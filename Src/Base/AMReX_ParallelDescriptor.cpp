@@ -70,6 +70,7 @@ namespace ParallelDescriptor
 	void DoAllReduceInt      (int&       r, MPI_Op op);
 
 	void DoAllReduceReal     (Real*      r, MPI_Op op, int cnt);
+	void DoAllReduceDouble     (double*      r, MPI_Op op, int cnt);
 	void DoAllReduceLong     (long*      r, MPI_Op op, int cnt);
 	void DoAllReduceInt      (int*       r, MPI_Op op, int cnt);
 
@@ -477,6 +478,11 @@ void
 ParallelDescriptor::ReduceRealSum (Real* r, int cnt)
 {
     util::DoAllReduceReal(r,MPI_SUM,cnt);
+}
+void
+ParallelDescriptor::ReduceDoubleSum (double* r, int cnt)
+{
+    util::DoAllReduceDouble(r,MPI_SUM,cnt);
 }
 
 void
@@ -966,6 +972,49 @@ ParallelDescriptor::util::DoAllReduceReal (Real&  r,
     r = recv;
 }
 
+void
+ParallelDescriptor::util::DoAllReduceDouble (double*  r,
+                                           MPI_Op op,
+                                           int    cnt)
+{
+#ifdef BL_LAZY
+    Lazy::EvalReduction();
+#endif
+
+    BL_PROFILE_S("ParallelDescriptor::util::DoAllReduceReal()");
+    BL_COMM_PROFILE_ALLREDUCE(BLProfiler::AllReduceR, BLProfiler::BeforeCall(), true);
+
+    BL_ASSERT(cnt > 0);
+
+    Vector<double> recv(cnt);
+
+#if defined(BL_USE_MPI3)
+    if (doTeamReduce() > 1) {
+	Vector<double> recv_team(cnt);
+	BL_MPI_REQUIRE( MPI_Reduce(r, recv_team.dataPtr(), cnt, Mpi_typemap<double>::type(), op,
+				   0, MyTeam().get_team_comm()) );
+	if (isTeamLead()) {
+	    BL_MPI_REQUIRE( MPI_Allreduce(recv_team.dataPtr(), recv.dataPtr(), cnt, 
+					  Mpi_typemap<double>::type(), op,
+					  MyTeam().get_lead_comm()) );
+	}
+	BL_MPI_REQUIRE( MPI_Bcast(recv.dataPtr(), cnt, Mpi_typemap<double>::type(), 
+				  0, MyTeam().get_team_comm()) );
+    }
+    else
+#endif
+    {
+	BL_MPI_REQUIRE( MPI_Allreduce(r,
+				      recv.dataPtr(),
+				      cnt,
+				      Mpi_typemap<double>::type(),
+				      op,
+				      Communicator()) );
+    }
+    BL_COMM_PROFILE_ALLREDUCE(BLProfiler::AllReduceR, cnt * sizeof(double), false);
+    for (int i = 0; i < cnt; i++)
+        r[i] = recv[i];
+}
 void
 ParallelDescriptor::util::DoAllReduceReal (Real*  r,
                                            MPI_Op op,

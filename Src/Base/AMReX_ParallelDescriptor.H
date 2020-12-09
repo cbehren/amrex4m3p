@@ -413,6 +413,7 @@ while ( false )
     //! Real sum reduction.
     void ReduceRealSum (Real& rvar);
     void ReduceRealSum (Real* rvar, int cnt);
+    void ReduceDoubleSum (double* rvar, int cnt);
     void ReduceRealSum (Vector<std::reference_wrapper<Real> >&& rvar);
     //! Real sum reduction to specified cpu.
     void ReduceRealSum (Real& rvar, int cpu);

@@ -67,7 +67,7 @@
 #include <cmath>
 #include <complex>
 
-typedef std::complex<double> complex_t;
+typedef std::complex<amrex::Real> complex_t;
 
 #define I complex_t(0.0, 1.0)
 
@@ -75,10 +75,13 @@ typedef std::complex<double> complex_t;
 
 #include <complex.h>
 #include <math.h>
-
+#ifdef BL_USE_FLOAT
+typedef float complex complex_t;
+#define complex_t(r,i) ((float)(r) + ((float)(i)) * I)
+#else
 typedef double complex complex_t;
-
 #define complex_t(r,i) ((double)(r) + ((double)(i)) * I)
+#endif
 
 #define real(x) creal(x)
 #define imag(x) cimag(x)
